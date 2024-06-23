@@ -2,7 +2,7 @@
 
 ## Overview
 
-Expanding your knowledge and staying updated with the latest trends in machine learning is crucial for continuous improvement. This section provides a curated list of additional resources, including books, online courses, blogs, research papers, and tools that can help you deepen your understanding of machine learning and Azure Machine Learning.
+This section provides a curated list of additional resources, including books, online courses, blogs, research papers, and tools that can help you deepen your understanding of machine learning and Azure Machine Learning.
 
 ## Books
 
