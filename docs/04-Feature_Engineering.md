@@ -148,3 +148,197 @@ best_model = run.get_output()
 Feature engineering is a vital step in the machine learning pipeline that can significantly improve model performance. By applying the techniques covered in this section, you can create more informative and useful features for your models. In the next section, we will discuss how to train and evaluate your machine learning models.
 
 Proceed to the [Model Training](Model_Training.md) section to continue.
+Certainly! Here's the content for `docs/Model_Training.md`:
+
+### `docs/Model_Training.md`
+
+```markdown
+# Model Training
+
+## Overview
+
+Model training is the process of feeding data to a machine learning algorithm to help it learn how to make predictions or decisions. In this section, we will cover the steps involved in training machine learning models using Azure Machine Learning, including data splitting, selecting algorithms, training models, and tuning hyperparameters.
+
+## Objectives
+
+By the end of this section, you will be able to:
+- Split your dataset into training and testing sets.
+- Choose appropriate machine learning algorithms.
+- Train models using Azure Machine Learning.
+- Tune hyperparameters to improve model performance.
+
+## 1. Splitting the Data
+
+Before training a model, it's essential to split the data into training and testing sets. The training set is used to train the model, while the testing set is used to evaluate its performance.
+
+Example:
+
+```python
+import pandas as pd
+from sklearn.model_selection import train_test_split
+
+# Load the dataset
+df = pd.read_csv('data/data.csv')
+
+# Define features and target
+X = df.drop(columns=['target'])
+y = df['target']
+
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+```
+
+## 2. Choosing a Machine Learning Algorithm
+
+The choice of algorithm depends on the type of problem (classification, regression, clustering, etc.) and the characteristics of the data. Common algorithms include:
+
+- **Classification**: Logistic Regression, Decision Trees, Random Forest, Support Vector Machines, Neural Networks.
+- **Regression**: Linear Regression, Ridge Regression, Lasso Regression, Decision Trees, Random Forest.
+- **Clustering**: K-Means, Hierarchical Clustering, DBSCAN.
+
+## 3. Training a Model
+
+### Using Scikit-Learn
+
+Scikit-learn is a popular machine learning library in Python. Below is an example of training a Random Forest classifier:
+
+```python
+from sklearn.ensemble import RandomForestClassifier
+
+# Initialize the model
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+
+# Train the model
+model.fit(X_train, y_train)
+```
+
+### Using Azure ML
+
+You can also use Azure Machine Learning to train models. This provides benefits such as distributed training, automatic logging, and version control.
+
+Example:
+
+```python
+from azureml.core import Workspace, Experiment
+from azureml.train.sklearn import SKLearn
+from azureml.train.estimator import Estimator
+
+# Connect to the Azure ML workspace
+ws = Workspace.from_config()
+
+# Create an experiment
+experiment = Experiment(workspace=ws, name='model-training')
+
+# Define the estimator
+estimator = Estimator(
+    source_directory='.',
+    entry_script='train.py',
+    compute_target='cpu-cluster',
+    conda_packages=['scikit-learn', 'pandas']
+)
+
+# Submit the experiment
+run = experiment.submit(estimator)
+run.wait_for_completion(show_output=True)
+```
+
+`train.py` example:
+
+```python
+import pandas as pd
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+
+# Load the dataset
+df = pd.read_csv('data/data.csv')
+
+# Define features and target
+X = df.drop(columns=['target'])
+y = df['target']
+
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Initialize and train the model
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+model.fit(X_train, y_train)
+
+# Evaluate the model
+y_pred = model.predict(X_test)
+accuracy = accuracy_score(y_test, y_pred)
+print(f'Accuracy: {accuracy}')
+```
+
+## 4. Hyperparameter Tuning
+
+Hyperparameter tuning involves adjusting the parameters of the machine learning algorithm to improve its performance. This can be done using techniques like grid search and random search.
+
+### Using Grid Search
+
+```python
+from sklearn.model_selection import GridSearchCV
+
+# Define the parameter grid
+param_grid = {
+    'n_estimators': [50, 100, 200],
+    'max_depth': [None, 10, 20, 30],
+    'min_samples_split': [2, 5, 10]
+}
+
+# Initialize the model
+model = RandomForestClassifier(random_state=42)
+
+# Initialize Grid Search
+grid_search = GridSearchCV(estimator=model, param_grid=param_grid, cv=5, scoring='accuracy')
+
+# Fit the grid search to the data
+grid_search.fit(X_train, y_train)
+
+# Print the best parameters
+print(f'Best parameters: {grid_search.best_params_}')
+```
+
+### Using Azure ML HyperDrive
+
+Azure Machine Learning provides HyperDrive for hyperparameter tuning.
+
+Example:
+
+```python
+from azureml.train.hyperdrive import GridParameterSampling, HyperDriveConfig, PrimaryMetricGoal, choice
+
+# Define the parameter space
+param_space = {
+    'n_estimators': choice(50, 100, 200),
+    'max_depth': choice(None, 10, 20, 30),
+    'min_samples_split': choice(2, 5, 10)
+}
+
+# Define the sampling method
+param_sampling = GridParameterSampling(param_space)
+
+# Define the HyperDrive configuration
+hyperdrive_config = HyperDriveConfig(
+    run_config=estimator,
+    hyperparameter_sampling=param_sampling,
+    primary_metric_name='accuracy',
+    primary_metric_goal=PrimaryMetricGoal.MAXIMIZE,
+    max_total_runs=20
+)
+
+# Submit the HyperDrive run
+hyperdrive_run = experiment.submit(hyperdrive_config)
+hyperdrive_run.wait_for_completion(show_output=True)
+
+# Get the best run
+best_run = hyperdrive_run.get_best_run_by_primary_metric()
+best_run_metrics = best_run.get_metrics()
+print(f'Best run metrics: {best_run_metrics}')
+```
+
+## Conclusion
+
+Training a machine learning model is a critical step that involves selecting the right algorithm, preparing the data, training the model, and tuning its parameters. With the tools and techniques covered in this section, you can build robust machine learning models using Azure Machine Learning. In the next section, we will explore how to evaluate and validate your trained models.
+
+Proceed to the [Model Evaluation](Model_Evaluation.md) section to continue.
